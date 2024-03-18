@@ -37,6 +37,7 @@ import AutoIcon from "../icons/auto.svg";
 import BottomIcon from "../icons/bottom.svg";
 import StopIcon from "../icons/pause.svg";
 import RobotIcon from "../icons/robot.svg";
+import CloseIcon from "../icons/close.svg";
 
 import {
   ChatMessage,
@@ -641,8 +642,34 @@ export function EditMessageModal(props: { onClose: () => void }) {
 
 export function DeleteImageButton(props: { deleteImage: () => void }) {
   return (
-    <div className={styles["delete-image"]} onClick={props.deleteImage}>
+    <div
+      className={styles["delete-image"]}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        props.deleteImage();
+      }}
+    >
       <DeleteIcon />
+    </div>
+  );
+}
+
+export function ImageBox(props: {
+  showImageBox: boolean;
+  data: { src: string; alt: string };
+  closeImageBox: () => void;
+}) {
+  return (
+    <div
+      className={styles["image-box"]}
+      style={{ display: props.showImageBox ? "block" : "none" }}
+      onClick={props.closeImageBox}
+    >
+      <img src={props.data.src} alt={props.data.alt} />
+      <div className={styles["image-box-close-button"]}>
+        <CloseIcon />
+      </div>
     </div>
   );
 }
@@ -677,6 +704,8 @@ function _Chat() {
   const navigate = useNavigate();
   const [attachImages, setAttachImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [showImageBox, setShowImageBox] = useState(false);
+  const [imageBoxData, setImageBoxData] = useState({ src: "", alt: "" });
 
   // prompt hints
   const promptStore = usePromptStore();
@@ -1100,70 +1129,44 @@ function _Chat() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
+
   const handlePaste = useCallback(
     async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const maxImages = 3;
       const currentModel = chatStore.currentSession().mask.modelConfig.model;
-      if(!isVisionModel(currentModel)){return;}
+      if (!isVisionModel(currentModel) || uploading) {
+        return;
+      }
       const items = (event.clipboardData || window.clipboardData).items;
+      const files: File[] = [];
       for (const item of items) {
-        if (item.kind === "file" && item.type.startsWith("image/")) {
-          event.preventDefault();
-          const file = item.getAsFile();
-          if (file) {
-            const images: string[] = [];
-            images.push(...attachImages);
-            images.push(
-              ...(await new Promise<string[]>((res, rej) => {
-                setUploading(true);
-                const imagesData: string[] = [];
-                compressImage(file, 256 * 1024)
-                  .then((dataUrl) => {
-                    imagesData.push(dataUrl);
-                    setUploading(false);
-                    res(imagesData);
-                  })
-                  .catch((e) => {
-                    setUploading(false);
-                    rej(e);
-                  });
-              })),
-            );
-            const imagesLength = images.length;
-
-            if (imagesLength > 3) {
-              images.splice(3, imagesLength - 3);
-            }
-            setAttachImages(images);
-          }
+        if (item.kind !== "file" || !item.type.startsWith("image/")) {
+          continue;
+        }
+        event.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          files.push(file);
         }
       }
-    },
-    [attachImages, chatStore],
-  );
-
-  async function uploadImage() {
-    const images: string[] = [];
-    images.push(...attachImages);
-
-    images.push(
-      ...(await new Promise<string[]>((res, rej) => {
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.accept =
-          "image/png, image/jpeg, image/webp, image/heic, image/heif";
-        fileInput.multiple = true;
-        fileInput.onchange = (event: any) => {
-          setUploading(true);
-          const files = event.target.files;
+      if (files.length == 0) {
+        return;
+      }
+      if (attachImages.length >= maxImages) {
+        return;
+      }
+      setUploading(true);
+      const images = [...attachImages];
+      images.push(
+        ...(await new Promise<string[]>((res, rej) => {
           const imagesData: string[] = [];
           for (let i = 0; i < files.length; i++) {
-            const file = event.target.files[i];
+            const file = files[i];
             compressImage(file, 256 * 1024)
               .then((dataUrl) => {
                 imagesData.push(dataUrl);
                 if (
-                  imagesData.length === 3 ||
+                  imagesData.length + attachImages.length >= maxImages ||
                   imagesData.length === files.length
                 ) {
                   setUploading(false);
@@ -1175,16 +1178,69 @@ function _Chat() {
                 rej(e);
               });
           }
-        };
-        fileInput.click();
-      })),
-    );
+        })),
+      );
+      const imagesLength = images.length;
+      if (imagesLength > maxImages) {
+        images.splice(maxImages, imagesLength - maxImages);
+      }
+      setAttachImages(images);
+    },
+    [attachImages, chatStore],
+  );
 
-    const imagesLength = images.length;
-    if (imagesLength > 3) {
-      images.splice(3, imagesLength - 3);
-    }
-    setAttachImages(images);
+  async function uploadImage() {
+    const maxImages = 3;
+    if (uploading) return;
+    new Promise<string[]>((res, rej) => {
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept =
+        "image/png, image/jpeg, image/webp, image/heic, image/heif";
+      fileInput.multiple = true;
+      fileInput.onchange = (event: any) => {
+        setUploading(true);
+        const files = event.target.files;
+        const imagesData: string[] = [];
+        if (attachImages.length >= maxImages) {
+          res([]);
+        }
+        for (let i = 0; i < files.length; i++) {
+          const file = event.target.files[i];
+          compressImage(file, 256 * 1024)
+            .then((dataUrl) => {
+              imagesData.push(dataUrl);
+              if (
+                imagesData.length + attachImages.length >= maxImages ||
+                imagesData.length === files.length
+              ) {
+                res(imagesData);
+              }
+            })
+            .catch((e) => {
+              rej(e);
+            });
+        }
+      };
+      fileInput.click();
+    })
+      .then((imagesData) => {
+        const images = attachImages.concat(imagesData);
+        const imagesLength = images.length;
+        if (imagesLength > maxImages) {
+          images.splice(maxImages, imagesLength - maxImages);
+        }
+        setAttachImages(images);
+      })
+      .finally(() => {
+        setUploading(false);
+      });
+  }
+
+  function openImageBox(src: string, alt?: string) {
+    alt = alt ?? "";
+    setImageBoxData({ src, alt });
+    setShowImageBox(true);
   }
 
   return (
@@ -1255,7 +1311,11 @@ function _Chat() {
           setShowModal={setShowPromptModal}
         />
       </div>
-
+      <ImageBox
+        showImageBox={showImageBox}
+        data={imageBoxData}
+        closeImageBox={() => setShowImageBox(false)}
+      ></ImageBox>
       <div
         className={styles["chat-body"]}
         ref={scrollRef}
@@ -1403,12 +1463,16 @@ function _Chat() {
                       fontSize={fontSize}
                       parentRef={scrollRef}
                       defaultShow={i >= messages.length - 6}
+                      openImageBox={openImageBox}
                     />
                     {getMessageImages(message).length == 1 && (
                       <img
                         className={styles["chat-message-item-image"]}
                         src={getMessageImages(message)[0]}
                         alt=""
+                        onClick={() =>
+                          openImageBox(getMessageImages(message)[0])
+                        }
                       />
                     )}
                     {getMessageImages(message).length > 1 && (
@@ -1429,6 +1493,7 @@ function _Chat() {
                               key={index}
                               src={image}
                               alt=""
+                              onClick={() => openImageBox(image)}
                             />
                           );
                         })}
@@ -1505,6 +1570,7 @@ function _Chat() {
                     key={index}
                     className={styles["attach-image"]}
                     style={{ backgroundImage: `url("${image}")` }}
+                    onClick={() => openImageBox(image)}
                   >
                     <div className={styles["attach-image-mask"]}>
                       <DeleteImageButton
