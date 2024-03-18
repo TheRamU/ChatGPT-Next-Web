@@ -1262,9 +1262,16 @@ function _Chat() {
         <div className={`window-header-title ${styles["chat-body-title"]}`}>
           <div
             className={`window-header-main-title ${styles["chat-body-main-title"]}`}
-            onClickCapture={() => setIsEditingMessage(true)}
           >
-            {!session.topic ? DEFAULT_TOPIC : session.topic}
+            <span
+              className={styles["chat-body-main-title-text"]}
+              onClickCapture={() => setIsEditingMessage(true)}
+            >
+              {!session.topic ? DEFAULT_TOPIC : session.topic}
+            </span>
+            <span className={styles["chat-body-main-title-tag"]}>
+              {session.mask.modelConfig.model}
+            </span>
           </div>
           <div className="window-header-sub-title">
             {Locale.Chat.SubTitle(session.messages.length)}
@@ -1504,7 +1511,8 @@ function _Chat() {
                   <div className={styles["chat-message-action-date"]}>
                     {isContext
                       ? Locale.Chat.IsContext
-                      : message.date.toLocaleString()}
+                      : message.date.toLocaleString() +
+                        (message.model ? " | " + message.model : "")}
                   </div>
                 </div>
               </div>
