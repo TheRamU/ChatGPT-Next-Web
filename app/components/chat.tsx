@@ -569,6 +569,8 @@ export function ChatActions(props: {
             chatStore.updateCurrentSession((session) => {
               session.mask.modelConfig.model = s[0] as ModelType;
               session.mask.syncGlobalConfig = false;
+              // sync global config
+              config.modelConfig.model = s[0] as ModelType;
             });
             showToast(s[0]);
           }}
