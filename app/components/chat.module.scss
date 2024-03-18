@@ -311,9 +311,10 @@
   }
 }
 
-.chat-body-main-title-tag {
+.chat-body-main-title-tag,
+.chat-body-main-sub-title-tag {
   margin-left: 5px;
-  padding: 4px 8px;
+  padding: 2px 8px;
   font-size: 12px;
   font-weight: bold;
   color: var(--black);
@@ -324,10 +325,18 @@
 
 @media only screen and (max-width: 600px) {
   .chat-body-title {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .chat-body-main-title-tag {
+    display: none;
+  }
+}
+
+@media only screen and (min-width: 600px) {
+  .chat-body-main-sub-title-tag {
     display: none;
   }
 }

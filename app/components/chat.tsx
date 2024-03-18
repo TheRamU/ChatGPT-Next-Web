@@ -1276,7 +1276,12 @@ function _Chat() {
             </span>
           </div>
           <div className="window-header-sub-title">
-            {Locale.Chat.SubTitle(session.messages.length)}
+            <span className={styles["chat-body-main-sub-title-text"]}>
+              {Locale.Chat.SubTitle(session.messages.length)}
+            </span>
+            <span className={styles["chat-body-main-sub-title-tag"]}>
+              {session.mask.modelConfig.model}
+            </span>
           </div>
         </div>
         <div className="window-actions">
