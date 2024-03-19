@@ -38,6 +38,7 @@ import BottomIcon from "../icons/bottom.svg";
 import StopIcon from "../icons/pause.svg";
 import RobotIcon from "../icons/robot.svg";
 import CloseIcon from "../icons/close.svg";
+import EraserIcon from "../icons/eraser.svg";
 
 import {
   ChatMessage,
@@ -547,6 +548,20 @@ export function ChatActions(props: {
               session.memoryPrompt = ""; // will clear memory
             }
           });
+        }}
+      />
+
+      <ChatAction
+        text={Locale.Chat.InputActions.ClearSession}
+        icon={<EraserIcon />}
+        onClick={() => {
+          chatStore.deleteSession(chatStore.currentSessionIndex);
+          if (config.dontShowMaskSplashScreen) {
+            chatStore.newSession();
+            navigate(Path.Chat);
+          } else {
+            navigate(Path.NewChat);
+          }
         }}
       />
 
