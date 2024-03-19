@@ -556,11 +556,13 @@ export function ChatActions(props: {
         icon={<EraserIcon />}
         onClick={() => {
           chatStore.deleteSession(chatStore.currentSessionIndex);
-          if (config.dontShowMaskSplashScreen) {
-            chatStore.newSession();
-            navigate(Path.Chat);
-          } else {
-            navigate(Path.NewChat);
+          if (chatStore.sessions.length > 1) {
+            if (config.dontShowMaskSplashScreen) {
+              chatStore.newSession();
+              navigate(Path.Chat);
+            } else {
+              navigate(Path.NewChat);
+            }
           }
         }}
       />
