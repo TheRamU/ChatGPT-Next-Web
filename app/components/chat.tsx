@@ -585,7 +585,9 @@ export function ChatActions(props: {
               session.mask.modelConfig.model = s[0] as ModelType;
               session.mask.syncGlobalConfig = false;
               // sync global config
-              config.modelConfig.model = s[0] as ModelType;
+              const modelConfig = { ...config.modelConfig };
+              modelConfig.model = s[0] as ModelType;
+              config.update((config) => (config.modelConfig = modelConfig));
             });
             showToast(s[0]);
           }}
