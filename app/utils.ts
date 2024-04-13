@@ -305,6 +305,9 @@ export function isVisionModel(model: string) {
   return (
     // model.startsWith("gpt-4-vision") ||
     // model.startsWith("gemini-pro-vision") ||
-    model.includes("vision") || model.startsWith("claude-3")
+    // model.includes("vision") || model.startsWith("claude-3")
+    model.includes("vision") ||
+    model.startsWith("claude-3") ||
+    !DEFAULT_MODELS.find((m) => m.name == model)
   );
 }
