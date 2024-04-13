@@ -117,6 +117,13 @@ export const KnowledgeCutOffDate: Record<string, string> = {
   "gemini-pro": "2023-12",
 };
 
+export const VISION_MODELS = [
+  "vision",
+  "claude-3",
+  "gpt-4-turbo",
+  "gemini-1.5",
+];
+
 export const DEFAULT_MODELS = [
   {
     name: "gpt-4",

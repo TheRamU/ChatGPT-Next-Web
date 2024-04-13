@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { showToast } from "./components/ui-lib";
 import Locale from "./locales";
 import { RequestMessage } from "./client/api";
-import { DEFAULT_MODELS } from "./constant";
+import { VISION_MODELS } from "./constant";
 
 export function trimTopic(topic: string) {
   // Fix an issue where double quotes still show in the Indonesian language
@@ -302,12 +302,5 @@ export function getMessageImages(message: RequestMessage): string[] {
 }
 
 export function isVisionModel(model: string) {
-  return (
-    // model.startsWith("gpt-4-vision") ||
-    // model.startsWith("gemini-pro-vision") ||
-    // model.includes("vision") || model.startsWith("claude-3")
-    model.includes("vision") ||
-    model.startsWith("claude-3") ||
-    !DEFAULT_MODELS.find((m) => m.name == model)
-  );
+  return VISION_MODELS.some((visionModel) => model.includes(visionModel));
 }
