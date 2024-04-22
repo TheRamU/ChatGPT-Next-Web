@@ -115,9 +115,10 @@ export class GeminiProApi implements LLMApi {
     const controller = new AbortController();
     options.onController?.(controller);
     try {
-      let googleChatPath = multimodal ? Google.VisionChatPath : Google.ChatPath;
+      let googleChatPath = visionModel
+        ? Google.VisionChatPath(modelConfig.model)
+        : Google.ChatPath(modelConfig.model);
       let chatPath = this.path(googleChatPath);
-
       // let baseUrl = accessStore.googleUrl;
 
       if (!baseUrl) {
