@@ -64,6 +64,7 @@ const en: LocaleType = {
       Prompt: "Prompts",
       Masks: "Masks",
       Clear: "Clear Context",
+      ClearSession: "Clear Session",
       Settings: "Settings",
       UploadImage: "Upload Images",
     },

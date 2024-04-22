@@ -92,7 +92,10 @@ function getSummarizeModel(currentModel: string) {
   if (currentModel.startsWith("gemini-pro")) {
     return GEMINI_SUMMARIZE_MODEL;
   }
-  return currentModel;
+  // return currentModel;
+
+  // all other models use gpt-3.5-turbo to summarize (WARN: this is a temporary solution, it should be changed in the future.)
+  return SUMMARIZE_MODEL;
 }
 
 function countMessages(msgs: ChatMessage[]) {
