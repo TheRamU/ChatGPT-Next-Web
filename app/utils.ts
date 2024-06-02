@@ -83,59 +83,6 @@ export async function downloadAs(text: string, filename: string) {
   }
 }
 
-export function compressImage(file: File, maxSize: number): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fetch(URL.createObjectURL(file))
-      .then((response) => response.blob())
-      .then((blob) => createImageBitmap(blob))
-      .then((imageBitmap) => {
-        let canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
-        let ctx = canvas.getContext("2d");
-        let width = imageBitmap.width;
-        let height = imageBitmap.height;
-        let quality = 0.9;
-
-        const checkSizeAndPostMessage = () => {
-          canvas
-            .convertToBlob({ type: "image/jpeg", quality: quality })
-            .then((blob) => {
-              const reader = new FileReader();
-              reader.onloadend = function () {
-                const base64data = reader.result;
-                if (typeof base64data !== "string") {
-                  reject("Invalid base64 data");
-                  return;
-                }
-                if (base64data.length < maxSize) {
-                  resolve(base64data);
-                  return;
-                }
-                if (quality > 0.5) {
-                  // Prioritize quality reduction
-                  quality -= 0.1;
-                } else {
-                  // Then reduce the size
-                  width *= 0.9;
-                  height *= 0.9;
-                }
-                canvas.width = width;
-                canvas.height = height;
-
-                ctx?.drawImage(imageBitmap, 0, 0, width, height);
-                checkSizeAndPostMessage();
-              };
-              reader.readAsDataURL(blob);
-            });
-        };
-        ctx?.drawImage(imageBitmap, 0, 0, width, height);
-        checkSizeAndPostMessage();
-      })
-      .catch((error) => {
-        throw error;
-      });
-  });
-}
-
 export function readFromFile() {
   return new Promise<string>((res, rej) => {
     const fileInput = document.createElement("input");
@@ -301,17 +248,19 @@ export function getMessageImages(message: RequestMessage): string[] {
 }
 
 export function isVisionModel(model: string) {
+  // Note: This is a better way using the TypeScript feature instead of `&&` or `||` (ts v5.5.0-dev.20240314 I've been using)
+
   const visionKeywords = [
     "vision",
     "claude-3",
     "gemini-1.5-pro",
-    "gpt-4-turbo",
+    "gemini-1.5-flash",
     "gpt-4o",
   ];
-  const isGpt4TurboPreview = model === "gpt-4-turbo-preview";
+  const isGpt4Turbo =
+    model.includes("gpt-4-turbo") && !model.includes("preview");
 
   return (
-    visionKeywords.some((keyword) => model.includes(keyword)) &&
-    !isGpt4TurboPreview
+    visionKeywords.some((keyword) => model.includes(keyword)) || isGpt4Turbo
   );
 }
