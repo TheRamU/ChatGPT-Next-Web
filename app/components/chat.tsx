@@ -108,7 +108,6 @@ import { ExportMessageModal } from "./exporter";
 import { getClientConfig } from "../config/client";
 import { useAllModels } from "../utils/hooks";
 import { MultimodalContent } from "../client/api";
-import { before } from "node:test";
 
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
@@ -644,12 +643,11 @@ export function ChatActions(props: {
             const [model, providerName] = s[0].split("@");
             chatStore.updateCurrentSession((session) => {
               session.mask.modelConfig.model = model as ModelType;
-              session.mask.modelConfig.providerName =
-                providerName as ServiceProvider;
+              session.mask.modelConfig.providerName = providerName as ServiceProvider;
               session.mask.syncGlobalConfig = false;
               // sync global config
               const modelConfig = { ...config.modelConfig };
-              modelConfig.model = s[0] as ModelType;
+              modelConfig.model = model as ModelType;
               config.update((config) => (config.modelConfig = modelConfig));
             });
             if (providerName == "ByteDance") {
